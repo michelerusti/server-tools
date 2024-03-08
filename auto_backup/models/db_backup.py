@@ -177,7 +177,6 @@ class DbBackup(models.Model):
             for rec in sftp:
                 filename = self.filename(datetime.now(), ext=rec.backup_format)
                 with rec.backup_log():
-
                     cached = db.dump_db(
                         self.env.cr.dbname, None, backup_format=rec.backup_format
                     )
@@ -217,8 +216,9 @@ class DbBackup(models.Model):
             _logger.exception("Database backup failed: %s", self.name)
             escaped_tb = tools.html_escape(traceback.format_exc())
             self.message_post(  # pylint: disable=translation-required
-                body="<p>%s</p><pre>%s</pre>"
-                % (_("Database backup failed."), escaped_tb),
+                body="<p>{}</p><pre>{}</pre>".format(
+                    _("Database backup failed."), escaped_tb
+                ),
                 subtype_id=self.env.ref("auto_backup.mail_message_subtype_failure").id,
             )
         else:
@@ -250,7 +250,7 @@ class DbBackup(models.Model):
                                 name.endswith(".%s" % file_extension)
                                 and os.path.basename(name) < oldest
                             ):
-                                remote.unlink("{}/{}".format(rec.folder, name))
+                                remote.unlink(f"{rec.folder}/{name}")
 
     @contextmanager
     def cleanup_log(self):
@@ -265,8 +265,9 @@ class DbBackup(models.Model):
             _logger.exception("Cleanup of old database backups failed: %s")
             escaped_tb = tools.html_escape(traceback.format_exc())
             self.message_post(  # pylint: disable=translation-required
-                body="<p>%s</p><pre>%s</pre>"
-                % (_("Cleanup of old database backups failed."), escaped_tb),
+                body="<p>{}</p><pre>{}</pre>".format(
+                    _("Cleanup of old database backups failed."), escaped_tb
+                ),
                 subtype_id=self.env.ref("auto_backup.failure").id,
             )
         else:
